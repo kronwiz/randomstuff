@@ -1,11 +1,16 @@
 <Stage>:
 	Palla:
-		ostacolo: ostacolo
+		ostacolo1: ostacolo1
+		ostacolo2: ostacolo2
 		center: self.parent.center
 
 	Ostacolo:
-		id: ostacolo
-		pos: 0, 0
+		id: ostacolo1
+		pos: 0, 100
+
+	Ostacolo:
+		id: ostacolo2
+		pos: self.parent.width - self.width, 100
 
 
 <Palla>:
@@ -19,7 +24,7 @@
 
 
 <Ostacolo>:
-	width: self.parent.width / 2
+	width: self.parent.width / 2 - 40
 	height: 20
 	canvas:
 		Color:
