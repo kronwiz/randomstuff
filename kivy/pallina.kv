@@ -1,0 +1,29 @@
+<Stage>:
+	Palla:
+		ostacolo: ostacolo
+		center: self.parent.center
+
+	Ostacolo:
+		id: ostacolo
+		pos: 0, 0
+
+
+<Palla>:
+	size: 50, 50
+	canvas:
+		Color:
+			rgb: 0.3, 0.3, 1
+		Ellipse:
+			pos: self.pos
+			size: self.size
+
+
+<Ostacolo>:
+	width: self.parent.width / 2
+	height: 20
+	canvas:
+		Color:
+			rgb: 1, 1, 0
+		Rectangle:
+			pos: self.pos
+			size: self.size
