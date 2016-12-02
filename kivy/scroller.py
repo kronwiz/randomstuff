@@ -60,7 +60,47 @@ class Stage ( Widget ):
 
 
 class Personaggio ( Widget ):
-	pass
+	stage = ObjectProperty ( None )
+
+	caduta_y = 2
+
+	def __init__ ( self, **kwargs ):
+		super ( Personaggio, self ).__init__ ( **kwargs )
+
+		Window.bind ( on_key_down = self.key_pressed )
+
+
+	def caduta ( self, dt ):
+		tocca = False
+		for b in self.stage.blocchi:
+			if self.collide_widget ( b ):
+				tocca = True
+				break
+
+		if tocca:
+			self.caduta_event.cancel ()
+
+		else:
+			self.y -= self.caduta_y
+
+
+	def key_pressed ( self, keyboard, keycode, scancode, codepoint, modifiers, **kwargs ):
+		if keycode == 32:  # space
+			self.y += 70
+			self.caduta_event = Clock.schedule_interval ( self.caduta, 0 )
+
+
+#		if keycode == 273:    # up
+#			self.y += 1
+#
+#		elif keycode == 274:  # down
+#			self.y -= 1
+#
+#		elif keycode == 275:  # right
+#			self.x += 1
+#
+#		elif keycode == 276:  # left
+#			self.x -= 1
 
 
 class ScrollerApp ( App ):

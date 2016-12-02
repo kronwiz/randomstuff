@@ -1,6 +1,9 @@
 <Stage>:
+	id: stage
+
 	Personaggio:
-		x: 0
+		stage: stage
+		x: ( root.width - self.width ) / 2
 		y: 35
 
 
@@ -14,10 +17,10 @@
 
 
 <Personaggio>
-	size: 26, 26
+	size: 21, 40
 	canvas:
 		Rectangle:
-			source: "personaggio3.png"
+			source: "personaggio2.png"
 			pos: self.pos
 			size: self.size
 
