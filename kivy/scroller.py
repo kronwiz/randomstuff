@@ -1,9 +1,10 @@
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.core.window import Window
+from kivy.core.image import Image
 from kivy.clock import Clock
 from kivy.vector import Vector
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty
 
 
 ALTEZZA = [ 1, 2, 2, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 6, 6, 6, 6, 5, 5, 4, 3, 3, 3, 2, 1 ]
@@ -22,15 +23,14 @@ class Stage ( Widget ):
 
 	# +1 per tenere conto dell'eventuale resto della divisione (un blocco dentro
 	# alla finestra solo in parte).
-	margine_destro = ( Window.width / Blocco.WIDTH + 1 ) * Blocco.WIDTH
-
-	altezza_corrente = 0
+	MARGINE_DESTRO = ( Window.width / Blocco.WIDTH + 1 ) * Blocco.WIDTH
 
 
 	def __init__ ( self, **kwargs ):
 		super ( Stage, self ).__init__ ( **kwargs )
 
 		self.blocchi = []
+		self.altezza_corrente = 0
 
 		# +1 per tenere conto dell'eventuale resto della divisione (un blocco dentro
 		# alla finestra solo in parte).
@@ -53,7 +53,7 @@ class Stage ( Widget ):
 
 			# quando il blocco e' completamente fuori dallo schermo
 			if b.x <= -1 * b.WIDTH:
-				b.x = self.margine_destro
+				b.x = self.MARGINE_DESTRO
 				b.y = ALTEZZA [ self.altezza_corrente ] * b.HEIGHT
 				self.altezza_corrente += 1
 				if self.altezza_corrente >= len ( ALTEZZA ): self.altezza_corrente = 0
@@ -67,6 +67,21 @@ class Personaggio ( Widget ):
 	def __init__ ( self, **kwargs ):
 		super ( Personaggio, self ).__init__ ( **kwargs )
 
+#		self.frames = [
+#			Image ( "personaggio1.png" ),
+#			Image ( "personaggio2.png" )
+#		]
+		self.frames = [ "personaggio1.png", "personaggio2.png" ]
+
+		self.frame_corrente = 0
+		self.frame = "personaggio1.png"
+
+		# questo evento controlla il contatto del personaggio con il suolo
+		self.caduta_event = Clock.schedule_interval ( self.caduta, 0 )
+
+		self.animazione_event = Clock.schedule_interval ( self.animazione, 1 / 25.0 )
+
+		# lettura della pressione dei tasti
 		Window.bind ( on_key_down = self.key_pressed )
 
 
@@ -77,17 +92,18 @@ class Personaggio ( Widget ):
 				tocca = True
 				break
 
-		if tocca:
-			self.caduta_event.cancel ()
-
-		else:
+		if not tocca:
 			self.y -= self.caduta_y
+
+
+	def animazione ( self, dt ):
+		self.frame_corrente = 1 - self.frame_corrente  # va bene fino a quando sono solo 2
+		self.frame = self.frames [ self.frame_corrente ]
 
 
 	def key_pressed ( self, keyboard, keycode, scancode, codepoint, modifiers, **kwargs ):
 		if keycode == 32:  # space
 			self.y += 70
-			self.caduta_event = Clock.schedule_interval ( self.caduta, 0 )
 
 
 #		if keycode == 273:    # up
