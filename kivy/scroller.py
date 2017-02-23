@@ -4,7 +4,11 @@ from kivy.core.window import Window
 from kivy.core.image import Image
 from kivy.clock import Clock
 from kivy.vector import Vector
-from kivy.properties import ObjectProperty, StringProperty
+from kivy.properties import ObjectProperty
+
+
+# mi serve globale per poter bloccare l'applicazione da qualunque widget
+application = None
 
 
 ALTEZZA = [ 1, 2, 2, 3, 3, 3, 4, 4, 4, 3, 3, 3, 4, 5, 6, 6, 6, 6, 5, 5, 4, 3, 3, 3, 2, 1 ]
@@ -67,19 +71,14 @@ class Personaggio ( Widget ):
 	def __init__ ( self, **kwargs ):
 		super ( Personaggio, self ).__init__ ( **kwargs )
 
-#		self.frames = [
-#			Image ( "personaggio1.png" ),
-#			Image ( "personaggio2.png" )
-#		]
 		self.frames = [ "personaggio1.png", "personaggio2.png" ]
-
 		self.frame_corrente = 0
-		self.frame = "personaggio1.png"
 
-		# questo evento controlla il contatto del personaggio con il suolo
+		# questo evento controlla il contatto del personaggio con un blocco
 		self.caduta_event = Clock.schedule_interval ( self.caduta, 0 )
 
-		self.animazione_event = Clock.schedule_interval ( self.animazione, 1 / 25.0 )
+		# questo evento cambia il frame del personaggio per animarlo
+		self.animazione_event = Clock.schedule_interval ( self.animazione, 1 / 15.0 )
 
 		# lettura della pressione dei tasti
 		Window.bind ( on_key_down = self.key_pressed )
@@ -87,17 +86,51 @@ class Personaggio ( Widget ):
 
 	def caduta ( self, dt ):
 		tocca = False
+		spinta = False
+
 		for b in self.stage.blocchi:
-			if self.collide_widget ( b ):
+			# controllo il contatto dei due estremi della base con un blocco per
+			# verificare se devo lasciare cadere il personaggio o se e' gia' appoggiato
+			#	+---+
+			#	|   |
+			# |   |
+			# |   |
+			# |   |
+			# |   |
+			# o---o
+			if b.collide_point ( self.x,  self.y ) or b.collide_point ( self.x + self.width, self.y ):
 				tocca = True
-				break
+
+			# controllo il contatto con un blocco del punto centrale del bordo a destra
+			# per verificare se devo spingere il personaggio verso sinistra
+			#	+---+
+			#	|   |
+			# |   |
+			# |   o
+			# |   |
+			# |   |
+			# +---+
+			if b.collide_point ( self.x + self.width, self.y + ( self.height / 2 ) ):
+				spinta = True
+
 
 		if not tocca:
 			self.y -= self.caduta_y
 
+		if spinta:
+			self.x += self.stage.velocita_x
+
+
+		# se il personaggio esce dallo schermo il gioco finisce
+		if self.x < 0: application.stop ()
+
 
 	def animazione ( self, dt ):
 		self.frame_corrente = 1 - self.frame_corrente  # va bene fino a quando sono solo 2
+		# Kivy si accorge della modifica a self.frame solo se la proprieta'
+		# viene definita nel file kv come proprieta' della classe <Personaggio>
+		# e poi utilizzata nell'istruzione Rectangle del canvas.
+		# Se viene definita nell'__init__ non ha lo stesso effetto.
 		self.frame = self.frames [ self.frame_corrente ]
 
 
@@ -125,5 +158,11 @@ class ScrollerApp ( App ):
 
 
 if __name__ == '__main__':
-    ScrollerApp ().run ()
+	application = ScrollerApp ()
+	application.run ()
+
+
+# Link utili:
+# http://stackoverflow.com/questions/36230958/how-do-i-reference-ids-of-children-within-a-canvas-in-kivy
+# https://kivy.org/docs/api-kivy.graphics.instructions.html#kivy.graphics.instructions.InstructionGroup
 
