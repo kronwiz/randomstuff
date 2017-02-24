@@ -14,13 +14,13 @@ public class MyWorld extends World
     // private int b_width = 0;
     
     /**
-     * Constructor for objects of class MyWorld.
+         * Constructor for objects of class MyWorld.
      * 
      */
     public MyWorld()
     {    
         // Create a new world with a cell size of 1x1 pixels.
-        super(600, 400, 1);
+        super(600, 400, 1, false);
         
         fill();
     }
@@ -31,13 +31,13 @@ public class MyWorld extends World
         int b_width = blocco.getImage().getWidth();
         int b_height = blocco.getImage().getHeight();
 
-        margineDestro = ( getWidth() / b_width - 1 ) * b_width + b_width / 2;
+        margineDestro = ( getWidth() / b_width + 1 ) * b_width;
 
         blocchi.clear(); // non si sa mai
         
-        for ( int k = 0; k < ( getWidth() / b_width ); k++ ) {
+        for ( int k = 0; k < ( getWidth() / b_width + 2); k++ ) {
             blocco = new Blocco();
-            addObject ( blocco, b_width / 2 + b_width * k, getHeight() - b_height / 2 );
+            addObject ( blocco, b_width * k + b_width/2, getHeight() - b_height / 2 );
             blocchi.add(blocco);
         }
     }

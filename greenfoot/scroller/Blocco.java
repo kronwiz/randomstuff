@@ -19,7 +19,7 @@ public class Blocco extends Actor
     {
        move(-1);
        
-       if ( getX() < width / 2 ) {
+       if ( getX() < -width ) {
            MyWorld world = (MyWorld) getWorld();
            setLocation( world.margineDestro, getY() );
        }
