@@ -1,0 +1,18 @@
+#BlueJ class context
+comment0.target=MazeGenerator
+comment0.text=\n\ recursive\ backtracking\ algorithm\n\ shamelessly\ borrowed\ from\ the\ ruby\ at\n\ http\://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking\n
+comment1.params=x\ y
+comment1.target=MazeGenerator(int,\ int)
+comment2.params=
+comment2.target=void\ display()
+comment3.params=col\ row
+comment3.target=void\ addBrick(int,\ int)
+comment4.params=world
+comment4.target=void\ render(greenfoot.World)
+comment5.params=cx\ cy
+comment5.target=void\ generateMaze(int,\ int)
+comment6.params=v\ upper
+comment6.target=boolean\ between(int,\ int)
+comment7.params=args
+comment7.target=void\ main(java.lang.String[])
+numComments=8
