@@ -1,4 +1,8 @@
-import greenfoot.*;
+/*
+ * MazeGenerator class taken from:
+ * http://rosettacode.org/wiki/Maze_generation#Java
+ */
+
 import java.util.Collections;
 import java.util.Arrays;
 
@@ -13,7 +17,7 @@ public class MazeGenerator {
     private final int x;
     private final int y;
     private final int[][] maze;
-    private World world;
+    private MyWorld world;
  
     public MazeGenerator(int x, int y) {
         this.x = x;
@@ -47,7 +51,7 @@ public class MazeGenerator {
         world.addObject(brick,col,row);
     }
     
-    public void render( World world ) {
+    public void render( MyWorld world ) {
         this.world = world;
         int STARTCOL = 1;
         int col = STARTCOL;
