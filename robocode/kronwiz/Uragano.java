@@ -13,14 +13,14 @@ import java.awt.Color;
  */
 public class Uragano extends Robot
 {
+	int direction = 1;  // 1 = in avanti, qualunque sia la direzione, -1 = indietro
+	int steps = 0;
+
 	/**
 	 * run: Uragano's default behavior
 	 */
 	public void run() {
 		// Initialization of the robot should be put here
-
-		// After trying out your robot, try uncommenting the import at the top,
-		// and the next line:
 
 		setColors(Color.red,Color.blue,Color.green); // body,gun,radar
 
@@ -32,11 +32,32 @@ public class Uragano extends Robot
 	}
 
 	/**
+	 * computeBulletPower: calcola la potenza di fuoco
+	 * 
+	 * Un proiettile può essere sparato con un'energia tra 0.1 e 3.0
+	 * Si muove a una velocità di: 20 - (3 * bulletPower)
+	 * Fa un danno pari a: (bulletPower * 4) + (max(0, bulletPower - 1) * 2)
+	 * Se colpisce il nemico restituisce un'energia pari a: 3 * bulletPower
+	 * Dopo aver sparato il cannone si surriscalda di: 1 + (bulletPower / 5)
+	 * 
+	 * L'oggetto Rules contiene metodi che restituiscono il risultato di questi calcoli
+	 * tenendo conto anche di alcuni parametri che possono essere modificati per ogni
+	 * battaglia.
+	 * 
+	 * Al normale tasso di raffreddamento di 0.1 a turno questo significa che per sparare di
+	 * nuovo il robot deve aspettare ceiling((1 + (bulletPower / 5)) * 10) turni prima di sparare
+	 * di nuovo.
+	 */
+	public double computeBulletPower () {
+		return 2;
+	}
+
+	/**
 	 * onScannedRobot: What to do when you see another robot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
 		/*
-		 * e.getBearing = angolo tra l'heading del robot e il target acquisito
+		 * e.getBearing = restituisce angolo tra l'heading del robot e il target acquisito
 		 * 
 		 * Quindi per far ruotare il radar nella direzione del target occorre correggere
 		 * con la differenza tra l'heading del robot e l'heading del radar.
@@ -44,16 +65,35 @@ public class Uragano extends Robot
 		 * Si usa sempre turn*Right perché se il risultato dell'operazione è negativo
 		 * turn*Right muove correttamente il radar/cannone a sinistra invece che a destra.
 		 */
-		
-		if ( e.getDistance () > 300 ) {
-			turnRight ( e.getBearing () );
-			ahead ( e.getDistance () - 300 );
-		} else {
-			turnGunRight ( getHeading () - getGunHeading () + e.getBearing () );
-			fire(2);
+
+		double targetBearing = e.getBearing ();  // posizione del target (angolo) rispetto al mio heading
+		double heading = getHeading ();  // mia direzione
+		double targetDistance = e.getDistance ();  // distanza del target
+
+		// se sono troppo lontano mi avvicino
+		if ( targetDistance > 300 ) {
+			turnRight ( targetBearing );
+			ahead ( targetDistance - 200 );
 		}
 
-		turnRadarRight ( getHeading () - getRadarHeading () + e.getBearing () );
+		// mi giro sempre perpendicolarmente al target
+		turnRight ( 90 + targetBearing );
+
+		// punto il cannone e sparo		
+		turnGunRight ( heading - getGunHeading () + targetBearing );
+		fire( computeBulletPower () );
+
+		// mi muovo un po' avanti e un po' indietro
+		if ( targetDistance <= 300 ) {
+			ahead ( direction * 40 );
+			steps++;
+			if ( steps % 20 == 0 ) direction *= -1;
+		}
+
+		// giro il radar verso il bersaglio per tenerlo sotto controllo (se ci riesco)
+		turnRadarRight ( heading - getRadarHeading () + targetBearing );
+
+		scan ();
 	}
 
 	/**
@@ -68,7 +108,7 @@ public class Uragano extends Robot
 	 * onHitWall: What to do when you hit a wall
 	 */
 	public void onHitWall(HitWallEvent e) {
-		// Replace the next line with any behavior you would like
-		back(20);
+		// se tocco un muro inverto la direzione di marcia
+		direction *= -1;
 	}	
 }
