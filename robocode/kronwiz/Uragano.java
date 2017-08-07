@@ -69,7 +69,7 @@ public class Uragano extends Robot
 		double targetBearing = e.getBearing ();  // posizione del target (angolo) rispetto al mio heading
 		double heading = getHeading ();  // mia direzione
 		double targetDistance = e.getDistance ();  // distanza del target
-
+/*
 		// se sono troppo lontano mi avvicino
 		if ( targetDistance > 300 ) {
 			turnRight ( targetBearing );
@@ -78,20 +78,39 @@ public class Uragano extends Robot
 
 		// mi giro sempre perpendicolarmente al target
 		turnRight ( 90 + targetBearing );
-
-		// punto il cannone e sparo		
-		turnGunRight ( heading - getGunHeading () + targetBearing );
+*/
+		// punto il cannone e sparo
+		/*
+		 * Scelgo l'angolo di rotazione più piccolo. Se l'angolo risultante è minore
+		 * di 180 gradi utilizzo quello, altrimenti utilizzo l'angolo cosiddetto
+		 * "esplementare", ovvero quello che sommato dà l'angolo giro perché in tal
+		 * caso è lui ad essere minore. I valori assoluti tengono conto del fatto che
+		 * gli angoli hanno un segno per indicare il verso di rotazione orario o antiorario,
+		 * e il segno deve essere tolto dai conti; ma alla fine il segno deve essere
+		 * ripristinato nell'ultima rotazione, altrimenti il cannone girerebbe sempre
+		 * a sinistra anche quando dovrebbe girare a destra.
+		 */
+		double gunAngle = heading - getGunHeading () + targetBearing;
+		if ( Math.abs ( gunAngle ) < 180 )
+			turnGunRight ( gunAngle );
+		else
+			turnGunLeft ( Math.signum ( gunAngle ) * ( 360 - Math.abs ( gunAngle ) ) );
 		fire( computeBulletPower () );
-
+/*
 		// mi muovo un po' avanti e un po' indietro
 		if ( targetDistance <= 300 ) {
 			ahead ( direction * 40 );
 			steps++;
 			if ( steps % 20 == 0 ) direction *= -1;
 		}
-
+*/
 		// giro il radar verso il bersaglio per tenerlo sotto controllo (se ci riesco)
-		turnRadarRight ( heading - getRadarHeading () + targetBearing );
+		// Stessa logica di rotazione del cannone
+		double radarAngle = heading - getRadarHeading () + targetBearing;
+		if ( Math.abs ( radarAngle ) < 180 )
+			turnRadarRight ( radarAngle );
+		else
+			turnRadarLeft ( Math.signum ( radarAngle ) * ( 360 - Math.abs ( radarAngle ) ) );
 
 		scan ();
 	}
