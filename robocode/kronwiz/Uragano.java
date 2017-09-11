@@ -15,6 +15,8 @@ public class Uragano extends Robot
 {
 	int direction = 1;  // 1 = in avanti, qualunque sia la direzione, -1 = indietro
 	int steps = 0;
+	boolean stopRadarWobbling = false;  // indica se devo bloccare l'oscillazione del radar
+	int radarWobblingDirection = 1;  // 1 = senso orario, -1 = senso antiorario
 
 	/**
 	 * run: Uragano's default behavior
@@ -27,7 +29,11 @@ public class Uragano extends Robot
 		// Robot main loop
 		setAdjustRadarForGunTurn ( true );  // fa muovere il radar indipendentemente dal cannone e dal robot
 		while ( true ) {
-			turnRadarRight ( 360 );
+			if ( ! stopRadarWobbling ) {
+				turnRadarRight ( radarWobblingDirection * 360 );
+				// invertiamo la direzione di oscillazione a ogni giro
+				radarWobblingDirection = radarWobblingDirection * -1;
+			}
 		}
 	}
 
@@ -53,9 +59,33 @@ public class Uragano extends Robot
 	}
 
 	/**
+	 * normalizeAngle: normalizza un angolo nell'intervallo -360/+360
+	 * 
+	 * Se l'angolo passato come parametro è al di fuori dell'intervallo (in gradi)
+	 * -360/360 viene riportato un questo intervallo.
+	 * 
+	 * NB: da valutare se sia meglio l'intervallo 0/360.
+	 */
+	public double normalizeAngle ( double angle ) {
+		while ( angle >= 360 ) {
+			angle = angle - 360;
+		}
+
+		while ( angle <= -360 ) {
+			angle = angle + 360;
+		}
+
+		return angle;
+	}
+
+	/**
 	 * onScannedRobot: What to do when you see another robot
 	 */
 	public void onScannedRobot(ScannedRobotEvent e) {
+		// appena vedo un robot blocco l'oscillazione del radar (quella controllata
+		// nel metodo "run")
+		stopRadarWobbling = true;
+
 		/*
 		 * e.getBearing = restituisce angolo tra l'heading del robot e il target acquisito
 		 * 
@@ -69,6 +99,7 @@ public class Uragano extends Robot
 		double targetBearing = e.getBearing ();  // posizione del target (angolo) rispetto al mio heading
 		double heading = getHeading ();  // mia direzione
 		double targetDistance = e.getDistance ();  // distanza del target
+
 /*
 		// se sono troppo lontano mi avvicino
 		if ( targetDistance > 300 ) {
@@ -79,6 +110,7 @@ public class Uragano extends Robot
 		// mi giro sempre perpendicolarmente al target
 		turnRight ( 90 + targetBearing );
 */
+
 		// punto il cannone e sparo
 		/*
 		 * Scelgo l'angolo di rotazione più piccolo. Se l'angolo risultante è minore
@@ -90,12 +122,16 @@ public class Uragano extends Robot
 		 * ripristinato nell'ultima rotazione, altrimenti il cannone girerebbe sempre
 		 * a sinistra anche quando dovrebbe girare a destra.
 		 */
-		double gunAngle = heading - getGunHeading () + targetBearing;
+		double gunAngle = normalizeAngle ( heading - getGunHeading () + targetBearing );
+		//out.println ( "gunAngle:" + gunAngle );
 		if ( Math.abs ( gunAngle ) < 180 )
 			turnGunRight ( gunAngle );
 		else
 			turnGunLeft ( Math.signum ( gunAngle ) * ( 360 - Math.abs ( gunAngle ) ) );
+
+		// sparo
 		fire( computeBulletPower () );
+
 /*
 		// mi muovo un po' avanti e un po' indietro
 		if ( targetDistance <= 300 ) {
@@ -104,15 +140,24 @@ public class Uragano extends Robot
 			if ( steps % 20 == 0 ) direction *= -1;
 		}
 */
+
 		// giro il radar verso il bersaglio per tenerlo sotto controllo (se ci riesco)
 		// Stessa logica di rotazione del cannone
 		double radarAngle = heading - getRadarHeading () + targetBearing;
-		if ( Math.abs ( radarAngle ) < 180 )
+		turnRadarRight ( radarAngle );
+
+/*		if ( Math.abs ( radarAngle ) < 180 )
 			turnRadarRight ( radarAngle );
 		else
 			turnRadarLeft ( Math.signum ( radarAngle ) * ( 360 - Math.abs ( radarAngle ) ) );
+*/
 
+		// se ho ancora un robot nel radar questo interrompe il metodo e lo ricomincia da capo
 		scan ();
+
+		// quindi in teoria se arrivo qui significa che non ho visto alcun robot, perciò è
+		// giusto far fare un giro al radar
+		stopRadarWobbling = false;
 	}
 
 	/**
