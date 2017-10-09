@@ -17,6 +17,7 @@ public class Uragano extends Robot
 	int steps = 0;
 	boolean stopRadarWobbling = false;  // indica se devo bloccare l'oscillazione del radar
 	int radarWobblingDirection = 1;  // 1 = senso orario, -1 = senso antiorario
+	double prevTargetEnergy = 0;  // energia del target rilevata durante la scansione precedente
 
 	/**
 	 * run: Uragano's default behavior
@@ -54,8 +55,10 @@ public class Uragano extends Robot
 	 * nuovo il robot deve aspettare ceiling((1 + (bulletPower / 5)) * 10) turni prima di sparare
 	 * di nuovo.
 	 */
-	public double computeBulletPower () {
-		return 2;
+	public double computeBulletPower ( double targetDistance ) {
+		double power = ( 600 - targetDistance ) / 200;
+		if ( power <= 0 ) power = 0.1;
+		return power;
 	}
 
 	/**
@@ -99,17 +102,27 @@ public class Uragano extends Robot
 		double targetBearing = e.getBearing ();  // posizione del target (angolo) rispetto al mio heading
 		double heading = getHeading ();  // mia direzione
 		double targetDistance = e.getDistance ();  // distanza del target
+		double targetEnergy = e.getEnergy ();  // energia del target
 
-/*
-		// se sono troppo lontano mi avvicino
-		if ( targetDistance > 300 ) {
+		/*
+		 * Se c'è una variazione nell'energia del target può darsi che abbia sparato,
+		 * così mi muovo per cercare di schivare il proiettile.
+		 */
+		if ( targetEnergy < prevTargetEnergy ) {
+			turnRight ( 90 + targetBearing );
+			ahead ( 60 * direction );			
+		} else if ( targetDistance > 300 ) {
+			// se sono troppo lontano mi avvicino
 			turnRight ( targetBearing );
 			ahead ( targetDistance - 200 );
+			targetDistance -= 200;
 		}
 
+		prevTargetEnergy = targetEnergy;
+
 		// mi giro sempre perpendicolarmente al target
-		turnRight ( 90 + targetBearing );
-*/
+//		turnRight ( 90 + targetBearing );
+
 
 		// punto il cannone e sparo
 		/*
@@ -130,7 +143,7 @@ public class Uragano extends Robot
 			turnGunLeft ( Math.signum ( gunAngle ) * ( 360 - Math.abs ( gunAngle ) ) );
 
 		// sparo
-		fire( computeBulletPower () );
+		fire( computeBulletPower ( targetDistance ) );
 
 /*
 		// mi muovo un po' avanti e un po' indietro
@@ -142,15 +155,8 @@ public class Uragano extends Robot
 */
 
 		// giro il radar verso il bersaglio per tenerlo sotto controllo (se ci riesco)
-		// Stessa logica di rotazione del cannone
 		double radarAngle = heading - getRadarHeading () + targetBearing;
 		turnRadarRight ( radarAngle );
-
-/*		if ( Math.abs ( radarAngle ) < 180 )
-			turnRadarRight ( radarAngle );
-		else
-			turnRadarLeft ( Math.signum ( radarAngle ) * ( 360 - Math.abs ( radarAngle ) ) );
-*/
 
 		// se ho ancora un robot nel radar questo interrompe il metodo e lo ricomincia da capo
 		scan ();
