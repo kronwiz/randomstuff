@@ -92,3 +92,9 @@ ENV/
 # Java
 *.class
 
+# Ruby & Jekyll
+Gemfile
+Gemfile.lock
+_site/
+jekyll_serve
+
