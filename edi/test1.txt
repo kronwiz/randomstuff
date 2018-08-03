@@ -1,0 +1,26 @@
+crea la variabile _a. crea la variabile _a1
+porta _a a 0
+
+crea la variabile b
+crea la variabile b1, porta b a 0
+
+porta c a ciao
+porta d a "ciao mondo!"
+
+ripeti per 10 volte (
+	cambia _a di 1
+)
+
+mostra la variabile _a
+
+se ( b < 1 ) allora (
+	chiedi "Dimmi un numero"
+)
+altrimenti ()
+
+ripeti per sempre (
+	cambia c di -1
+
+	se ( c = 0 ) allora ( esci )
+)
+
