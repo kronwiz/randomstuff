@@ -17,26 +17,28 @@ start: instruction+
 
 
 
-create_stmt: "crea" object name
-set_stmt: "porta" name ( name | num | str | strquot )
-repeat_stmt: "ripeti" ( integer "volte" | "sempre" ) block
-show_stmt: "mostra" object name
-modify_stmt: "cambia" name num
+create_stmt: "crea" object objname
+set_stmt: "porta" objname _PREPOSITION? ( name | num | str | strquot )
+repeat_stmt: "ripeti" _PREPOSITION? ( integer "volte" | "sempre" ) block
+show_stmt: "mostra" object objname
+modify_stmt: "cambia" objname _PREPOSITION? num
 if_stmt: "se" test "allora" block ["altrimenti" block]?
 ask_stmt: "chiedi" strquot
 break_stmt: "esci"
 
 
 block: "(" instruction* ")"
-test: "(" comparison ")"
+test: "("? comparison ")"?
 
 
-object: OBJECT
+//object: OBJECT
+object: CNAME
 name: CNAME
 integer: INT
 num: SIGNED_NUMBER
 str: STRING_INNER
 strquot: ESCAPED_STRING
+objname: CNAME+
 
 
 // Math and logic
@@ -65,25 +67,27 @@ strquot: ESCAPED_STRING
 !_mul_op: "*"|"@"|"/"|"%"|"//"
 
 
-// Ignore
-
-%ignore ARTICLE
-%ignore PREPOSITION
-%ignore PUNCTUATION
-%ignore WS
-
 
 // *****
 // Lexer
 // *****
 
 
-OBJECT.3: ( "variabile" )
+//OBJECT.3: ( "variabile" )
 ARTICLE.3: ( " il " | " lo " | " la " | " i " | " gli " | " le " )
-PREPOSITION.3: ( " di " | " a " | " da " | " in " | " con " | " su " | " per " | " tra " | " fra " )
+_PREPOSITION.3: ( " di " | " a " | " da " | " in " | " con " | " su " | " per " | " tra " | " fra " )
 PUNCTUATION.3: ( "." | "," | ";" | ":" )
 CNAME: ("_"|LETTER) ("_"|LETTER|DIGIT)*
 // WORD.2: LETTER+
+
+
+// Ignore
+
+%ignore ARTICLE
+%ignore PUNCTUATION
+//%ignore PREPOSITION
+%ignore WS
+
 
 %import common.LETTER
 %import common.DIGIT
