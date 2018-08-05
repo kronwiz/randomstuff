@@ -1,4 +1,5 @@
-crea la variabile _a. crea la variabile _a1
+crea la variabile _a
+crea la variabile _a1
 porta _a a 0
 
 crea la variabile prato verde
@@ -23,4 +24,7 @@ ripeti per sempre (
 
 	se c = 0 allora ( esci )
 )
+
+numero casuale: da 1 a 20 .
+scrivi il testo aaaa
 
