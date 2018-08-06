@@ -6,7 +6,7 @@ start: instruction+
 // ******
 
 
-?instruction: create_stmt
+?instruction: ( create_stmt
             | set_stmt
             | repeat_stmt
             | show_stmt
@@ -14,36 +14,38 @@ start: instruction+
             | if_stmt
             | ask_stmt
             | break_stmt
-            | function
-
+            | function ) _NEWLINE*
 
 
 create_stmt: "crea" object objname
-set_stmt: "porta" objname PREPOSITION? ( name | num | str | strquot )
-repeat_stmt: "ripeti" PREPOSITION? ( integer "volte" | "sempre" ) block
+set_stmt: "porta" objname PREPOSITION? paramvalue
+repeat_stmt: "ripeti" PREPOSITION? ( repeat_times "volte" | "sempre" ) block
 show_stmt: "mostra" object objname
-modify_stmt: "cambia" objname PREPOSITION? num
+modify_stmt: "cambia" objname PREPOSITION? modify_value
 if_stmt: "se" test "allora" block ["altrimenti" block]?
-ask_stmt: "chiedi" strquot
+ask_stmt: "chiedi" ask_text
 break_stmt: "esci"
 
-function: funcname params "."?
-?funcname: name | funcname name ":"
-params: ( paramname paramvalue )+
-?paramname: name  -> paramname
-paramvalue: name | num | str | strquot  -> paramvalue
+repeat_times: integer
+modify_value: num
+ask_text: strquot
 
-block: "(" instruction* ")"
+function: _funcname params _NEWLINE
+_funcname: name ( _funcname | ":" )
+params: ( paramname paramvalue )+
+paramname: name
+paramvalue: name | num | str | strquot
+
+block: _NEWLINE* "(" _NEWLINE* instruction* ")" _NEWLINE*
 test: "("? comparison ")"?
 
 
-//object: OBJECT
 object: CNAME
 ?name: ( CNAME | PREPOSITION )
-integer: INT
+?integer: INT
 ?num: SIGNED_NUMBER
-str: STRING_INNER
-strquot: ESCAPED_STRING
+?str: STRING_INNER
+?strquot: ESCAPED_STRING
 objname: CNAME+
 
 
@@ -82,8 +84,9 @@ objname: CNAME+
 //OBJECT.3: ( "variabile" )
 ARTICLE.3: ( " il " | " lo " | " la " | " i " | " gli " | " le " | " un " | " uno " | " una " )
 PREPOSITION.3: ( " di " | " a " | " da " | " in " | " con " | " su " | " per " | " tra " | " fra " )
-PUNCTUATION.3: ( "," | ";" )
+PUNCTUATION.3: ( "." | "," | ";" )
 CNAME: ("_"|LETTER) ("_"|LETTER|DIGIT)*
+_NEWLINE: (CR? LF)+
 // WORD.2: LETTER+
 
 
@@ -91,8 +94,7 @@ CNAME: ("_"|LETTER) ("_"|LETTER|DIGIT)*
 
 %ignore ARTICLE
 %ignore PUNCTUATION
-//%ignore PREPOSITION
-%ignore WS
+%ignore WS_INLINE
 
 
 %import common.LETTER
@@ -101,5 +103,7 @@ CNAME: ("_"|LETTER) ("_"|LETTER|DIGIT)*
 %import common.SIGNED_NUMBER
 %import common.STRING_INNER
 %import common.ESCAPED_STRING
-%import common.WS
+%import common.WS_INLINE
+%import common.CR
+%import common.LF
 

@@ -12,11 +12,6 @@ def main ():
 	#parser = Lark ( grammar, parser = "lalr", lexer = "contextual" )
 	#parser = Lark ( grammar )
 
-	#print ( "--- Parsing internal test ---\n" )
-	#tree = parser.parse ( "crea la variabile a" )
-	#print ( tree.pretty () )
-
-
 	count = 1
 	testfile = "./test%s.txt" % count
 	while os.path.exists ( testfile ):
@@ -30,6 +25,8 @@ def main ():
 			print ( "Lexer: ", [ x for x in parser.lex ( buf ) ], "\n" )
 
 			tree = parser.parse ( buf )
+
+			print ( tree, "\n\n" )
 
 			print ( tree.pretty () )
 
