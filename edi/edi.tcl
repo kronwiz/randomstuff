@@ -2,18 +2,26 @@ package require Tk
 
 source "./sprite_def_image.tcl"
 
-set WIDTH_KW "width"
-set HEIGHT_KW "height"
-set TO_KW "to"
-set COSTUME_KW "costume"
+set KW_WIDTH "width"
+set KW_HEIGHT "height"
+set KW_TO "to"
+set KW_COSTUME "costume"
+
+set ERR_OBJECT_NAME_EMPTY "Object name cannot be empty"
+set ERR_OBJECT_NAME_EXISTS {Object name must be unique. The name \"$name\" already exists}
+set ERR_OBJECT_NAME_UNKNOWN {Object with name \"$name\" doesn't exist}
 
 set __STAGE__ {}
 set __OBJTREE__ {}
 
 
-proc tk_wait {} {
+proc wait {{how_long 1} {unit "milliseconds"}} {
 	global __TK_WAIT__
-	after 1 set __TK_WAIT__ &
+
+	if {$unit eq "seconds"} {
+		set how_long [expr {$how_long * 1000}]
+	}
+	after $how_long set __TK_WAIT__ &
 	#vwait __TK_WAIT__
 	tkwait variable __TK_WAIT__
 	unset __TK_WAIT__
@@ -22,9 +30,9 @@ proc tk_wait {} {
 proc shift_args {params} {
 	# removes the unnecessary preposition if there's any at the beginning of params
 	# and returns the "clean" list of the remaining parameters
-	global TO_KW
+	global KW_TO
 
-	if {[lindex $params 0] eq $TO_KW} {
+	if {[lindex $params 0] eq $KW_TO} {
 		lrange $params 1 end
 	} else {
 		$params
@@ -33,10 +41,11 @@ proc shift_args {params} {
 
 proc new {what name args} {
 	global __STAGE__ SPRITE_DEF_IMAGE __OBJTREE__
-	global WIDTH_KW HEIGHT_KW COSTUME_KW
+	global KW_WIDTH KW_HEIGHT KW_COSTUME
+	global ERR_OBJECT_NAME_EMPTY ERR_OBJECT_NAME_EXISTS
 
-	if {[string trim "$name"] eq ""} {return -code error "Object name cannot be empty"}
-	if [dict exists $__OBJTREE__ $name] {return -code error "Object name must be unique. The name \"$name\" already exists"}
+	if {[string trim "$name"] eq ""} {return -code error $ERR_OBJECT_NAME_EMPTY}
+	if [dict exists $__OBJTREE__ $name] {return -code error [subst -nocommands $ERR_OBJECT_NAME_EXISTS]}
 
 	set obj [dict create\
 		id 0\
@@ -54,9 +63,9 @@ proc new {what name args} {
 
 	switch $what {
 		stage {
-			set wk [lsearch -exact $args $WIDTH_KW]
+			set wk [lsearch -exact $args $KW_WIDTH]
 			set width [expr {$wk == -1 ? 640 : [lindex $args $wk+1]}]
-			set hk [lsearch -exact $args $HEIGHT_KW]
+			set hk [lsearch -exact $args $KW_HEIGHT]
 			set height [expr {$hk == -1 ? 480 : [lindex $args $hk+1]}]
 			dict set __OBJTREE__ $name width $width
 			dict set __OBJTREE__ $name height $height
@@ -68,7 +77,7 @@ proc new {what name args} {
 		}
 
 		sprite {
-			set ck [lsearch -exact $args $COSTUME_KW]
+			set ck [lsearch -exact $args $KW_COSTUME]
 			if {$ck == -1} {
 				# if not specified use the default costume
 				set costname __DEFAULT_COSTUME__
@@ -82,8 +91,15 @@ proc new {what name args} {
 		}
 
 		costume {
-			set img [image create photo -data $SPRITE_DEF_IMAGE]  ;# NB: no name
-			lappend images $img
+			if {[llength $args] > 0} {
+				for {set t 0} {$t < [llength $args]} {incr t} {
+					set img [image create photo -file [lindex $args $t]]  ;# NB: no name
+					lappend images $img
+				}
+			} else {
+				set img [image create photo -data $SPRITE_DEF_IMAGE]  ;# NB: no name
+				lappend images $img
+			}
 			dict set __OBJTREE__ $name images $images
 		}
 	}
@@ -91,21 +107,23 @@ proc new {what name args} {
 	return $obj
 }
 
-new costume __DEFAULT_COSTUME__  ;# FIXME: add file name
+new costume __DEFAULT_COSTUME__ "./squirrel.png"
 
 proc move {name to x {y 0}} {
 	global __STAGE__ __OBJTREE__
+	global ERR_OBJECT_NAME_UNKNOWN
+
 	try {
 		set obj [dict get $__OBJTREE__ $name]
 	} on error {} {
-		return -code error "Object with name \"$name\" doesn't exist"
+		return -code error [subst -nocommands $ERR_OBJECT_NAME_UNKNOWN]
 	}
 
 	lassign [shift_args [list $to $x $y]] x y
 	dict set __OBJTREE__ $name x $x
 	dict set __OBJTREE__ $name y $y
 	$__STAGE__ moveto [dict get $obj image_] $x $y
-	tk_wait
+	wait
 }
 
 proc repeat {times body} {
@@ -122,8 +140,8 @@ proc sposta {s} {
 proc test {} {
 	new stage s
 	new costume squirrel
-	#new sprite a costume squirrel
-	new sprite a
+	new sprite a costume squirrel
+	#new sprite a
 
 	# prova di chiamata a una procedura
 	sposta a
@@ -138,6 +156,7 @@ proc test {} {
 	repeat 200 {
 		incr t
 		move a to 209 [expr {20+$t}]
+		wait 10 ;# milliseconds
 	}
 }
 
