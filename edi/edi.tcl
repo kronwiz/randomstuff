@@ -5,6 +5,7 @@ source "./sprite_def_image.tcl"
 set KW_WIDTH "width"
 set KW_HEIGHT "height"
 set KW_TO "to"
+set KW_IN "in"
 set KW_COSTUME "costume"
 
 set ERR_OBJECT_NAME_EMPTY "Object name cannot be empty"
@@ -30,13 +31,27 @@ proc wait {{how_long 1} {unit "milliseconds"}} {
 proc shift_args {params} {
 	# removes the unnecessary preposition if there's any at the beginning of params
 	# and returns the "clean" list of the remaining parameters
-	global KW_TO
+	global KW_TO KW_IN
 
-	if {[lindex $params 0] eq $KW_TO} {
+	if {[lindex $params 0] in [list $KW_TO $KW_IN]} {
 		lrange $params 1 end
 	} else {
-		$params
+		return $params
 	}
+}
+
+proc get_obj_by_name {name} {
+	# returns the object with name "name" from the object tree or an error
+	# if there's no such object
+	global __OBJTREE__
+	global ERR_OBJECT_NAME_UNKNOWN
+
+	try {
+		set obj [dict get $__OBJTREE__ $name]
+	} on error {} {
+		return -code error [subst -nocommands $ERR_OBJECT_NAME_UNKNOWN]
+	}
+	return $obj
 }
 
 proc new {what name args} {
@@ -57,7 +72,8 @@ proc new {what name args} {
 		height 0\
 		canvas_ ""\
 		image_ ""\
-		images ""]
+		images ""\
+		direction 90]
 
 	dict set __OBJTREE__ $name $obj
 
@@ -109,7 +125,7 @@ proc new {what name args} {
 
 new costume __DEFAULT_COSTUME__ "./squirrel.png"
 
-proc move {name to x {y 0}} {
+proc go {name to x {y 0}} {
 	global __STAGE__ __OBJTREE__
 	global ERR_OBJECT_NAME_UNKNOWN
 
@@ -123,7 +139,36 @@ proc move {name to x {y 0}} {
 	dict set __OBJTREE__ $name x $x
 	dict set __OBJTREE__ $name y $y
 	$__STAGE__ moveto [dict get $obj image_] $x $y
+	wait  ;# always needed to avoid to freeze the Tk event loop
+}
+
+proc let {name what to {val 0}} {
+	global __STAGE__ __OBJTREE__
+
+	set obj [get_obj_by_name $name]
+	lassign [shift_args [list $to $val]] val
+	dict set __OBJTREE__ $name $what $val
+	if {$what eq "x"} {
+		set x $val
+		set y ""
+	} else {
+		set x ""
+		set y $val
+	}
+	$__STAGE__ moveto [dict get $obj image_] $x $y
 	wait
+}
+
+proc point {name in direction {degrees 0}} {
+	global __STAGE__ __OBJTREE__
+
+	set obj [get_obj_by_name $name]
+	lassign [shift_args [list $in $direction $degrees]] direction degrees
+	dict set __OBJTREE__ $name direction $degrees
+	# Image rotation articles:
+	# http://blog.tcl.tk/4022  Photo image rotation
+	# http://blog.tcl.tk/38709  Rotate TkPhoto Image
+	# http://www.freedomenv.com/TkGooies/CODEpages/IMAGEtools/rotateImage_on2ndCanvas/rotate_image_on2ndCanvas.htm  FE 'tkGooie' Utilities 'IMAGEtools' group
 }
 
 proc repeat {times body} {
@@ -134,7 +179,7 @@ proc repeat {times body} {
 
 
 proc sposta {s} {
-	move $s to 210 100
+	go $s to 210 100
 }
 
 proc test {} {
@@ -148,16 +193,19 @@ proc test {} {
 
 
 	for {set t 0} {$t < 200} {incr t} {
-		move a to [expr {10+$t}] 20
-		#move a [expr {10+$t}] 20
+		go a to [expr {10+$t}] 20
+		#go a [expr {10+$t}] 20
 	}
 
 	set t 0
 	repeat 200 {
 		incr t
-		move a to 209 [expr {20+$t}]
+		go a to 209 [expr {20+$t}]
 		wait 10 ;# milliseconds
 	}
+
+	let a x to 20
+	let a y to 20
 }
 
 test
